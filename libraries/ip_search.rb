@@ -5,6 +5,7 @@ def search_nodes(search_criteria, mandatory=false)
   retval = []
   search(:node, search_criteria).each do |matching_node|
     break if matching_node == :node
+    next if matching_node[:network] == nil
     # reduce returned node information to name and network information
     retnode = Mash.new({
       :hostname => matching_node[:hostname],
