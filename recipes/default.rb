@@ -114,25 +114,22 @@ template "/etc/shorewall/zones" do
 end
 
 shorewall_enabled = [true, "true"].include?(node[:shorewall][:enabled])
-if shorewall_enabled
-  template "/etc/shorewall/shorewall.conf"
+template "/etc/shorewall/shorewall.conf" do
+  source "shorewall.conf.erb"
+  mode 0600
 end
 
 case node[:platform]
 when "debian", "ubuntu"
   template "/etc/default/shorewall" do
     source "default.erb"
-    mode "0644"
-    variables(
-      :enabled => shorewall_enabled ? 1 : 0
-    )
+    mode 0644
   end
 end
 
 service "shorewall" do
   supports [ :status, :restart ]
-  action :nothing
-  action [:start, :enable] if shorewall_enabled
+  action shorewall_enabled ? [:start, :enable] : :disable
 end
 
 # vim: ai et sts=2 sw=2 sts=2

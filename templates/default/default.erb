@@ -2,7 +2,7 @@
 # prevent startup with default configuration
 # set the following varible to 1 in order to allow Shorewall to start
 
-startup=<%= @enabled %>
+startup=<%= node['shorewall']['enabled'] ? '1' : '0' %>
 
 # If your Shorewall configuration requires detection of the ip address of a ppp
 # interface, you must list such interfaces in "wait_interface" to get Shorewall
