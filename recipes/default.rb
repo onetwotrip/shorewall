@@ -131,9 +131,8 @@ end
 
 service "shorewall" do
   supports [ :status, :restart ]
-  if shorewall_enabled
-    action [:start, :enable]
-  end
+  action :nothing
+  action [:start, :enable] if shorewall_enabled
 end
 
 # vim: ai et sts=2 sw=2 sts=2
