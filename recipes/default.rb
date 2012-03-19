@@ -56,6 +56,22 @@ zones_per_interface.each_pair do |interface,zones|
   end
 end
 
+incookbook_actions = [ 'Limit' ]
+incookbook_actions.each do |act|
+  shorewall_action act do
+    source "actions/#{act}"
+    notifies :restart, "service[shorewall]"
+  end
+end
+
+template "/etc/shorewall/actions" do
+  source "actions.erb"
+  mode 0600
+  owner "root"
+  group "root"
+  notifies :restart, "service[shorewall]"
+end
+
 template "/etc/shorewall/hosts" do
   source "hosts.erb"
   mode 0600

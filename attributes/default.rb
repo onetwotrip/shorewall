@@ -11,6 +11,7 @@ default[:shorewall][:zone_hosts][:net] = "0.0.0.0/0"
 default[:shorewall][:default_interface_settings][:broadcast] = "detect"
 default[:shorewall][:default_interface_settings][:options] = "tcpflags,blacklist,routefilter,nosmurfs,logmartians,dhcp"
 
+default[:shorewall][:actions] = [ 'Limit' ]
 
 override[:shorewall][:zones] = [
     { :zone => "fw", :type => "firewall" },
@@ -36,7 +37,7 @@ override[:shorewall][:hosts] = []
 
 override[:shorewall][:rules] = [
     { :description => "Incoming SSH to firewall",
-      :source => "all", :dest => :fw, :proto => :tcp, :dest_port => 22, :action => :ACCEPT, :rate_limit => "12/min" }
+      :source => "all", :dest => :fw, :proto => :tcp, :dest_port => 22, :action => 'Limit:none:SSHA,5,60' }
 ]
 
 # vim: ai et sts=4 sw=4 ts=4
