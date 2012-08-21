@@ -26,12 +26,16 @@ node[:shorewall][:zone_interfaces].each_pair do |zone,interface|
   zones_per_interface[interface].add(zone)
 end
 
-default_settings = node[:shorewall][:default_interface_settings].to_hash
+# symbolize keys and inject a new hash hash
+default_settings = node[:shorewall][:default_interface_settings].to_hash.keys.inject({}) { |h, k|
+  h[k.to_sym] = node[:shorewall][:default_interface_settings][k]; h
+}
+
 zones_per_interface.each_pair do |interface,zones|
   if zones.length > 1
-    node.override[:shorewall][:interfaces] << default_settings.merge({
-      :interface => interface
-    })
+    unless node[:shorewall][:interfaces].any? { |iface| iface[:interface] == interface }
+      node.override[:shorewall][:interfaces] << default_settings.merge({:interface => interface})
+    end
     zones.each do |zone|
       zone_hosts = node[:shorewall][:zone_hosts][zone]
       if zone_hosts != nil
@@ -49,10 +53,12 @@ zones_per_interface.each_pair do |interface,zones|
       end
     end
   else
-    node.override[:shorewall][:interfaces] << default_settings.merge({
-      :zone => zones.to_a[0],
-      :interface => interface
-    })
+    unless node[:shorewall][:interfaces].any? { |iface| iface[:interface] == interface }
+      node.override[:shorewall][:interfaces] << default_settings.merge({
+       :zone => zones.to_a[0],
+       :interface => interface
+      })
+    end
   end
 end
 
