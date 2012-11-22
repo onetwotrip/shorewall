@@ -62,11 +62,15 @@ zones_per_interface.each_pair do |interface,zones|
   end
 end
 
+if node[:shorewall][:skip_restart].to_s == "true"
+  Chef::Log.warn("recipe[#{cookbook_name}::#{recipe_name}] :skip_restart is enabled, skipping the shorewall restart!")
+end
+
 incookbook_actions = [ 'Limit' ]
 incookbook_actions.each do |act|
   shorewall_action act do
     source "actions/#{act}"
-    notifies :restart, "service[shorewall]"
+    notifies(:restart, "service[shorewall]") unless node[:shorewall][:skip_restart].to_s == "true"
   end
 end
 
@@ -75,7 +79,7 @@ template "/etc/shorewall/actions" do
   mode 0600
   owner "root"
   group "root"
-  notifies :restart, "service[shorewall]"
+  notifies(:restart, "service[shorewall]") unless node[:shorewall][:skip_restart].to_s == "true"
 end
 
 template "/etc/shorewall/hosts" do
@@ -83,7 +87,7 @@ template "/etc/shorewall/hosts" do
   mode 0600
   owner "root"
   group "root"
-  notifies :restart, "service[shorewall]"
+  notifies(:restart, "service[shorewall]") unless node[:shorewall][:skip_restart].to_s == "true"
 end
 
 template "/etc/shorewall/interfaces" do
@@ -91,7 +95,7 @@ template "/etc/shorewall/interfaces" do
   mode 0600
   owner "root"
   group "root"
-  notifies :restart, "service[shorewall]"
+  notifies(:restart, "service[shorewall]") unless node[:shorewall][:skip_restart].to_s == "true"
 end
 
 template "/etc/shorewall/policy" do
@@ -99,7 +103,7 @@ template "/etc/shorewall/policy" do
   mode 0600
   owner "root"
   group "root"
-  notifies :restart, "service[shorewall]"
+  notifies(:restart, "service[shorewall]") unless node[:shorewall][:skip_restart].to_s == "true"
 end
 
 template "/etc/shorewall/rules" do
@@ -107,7 +111,7 @@ template "/etc/shorewall/rules" do
   mode 0600
   owner "root"
   group "root"
-  notifies :restart, "service[shorewall]"
+  notifies(:restart, "service[shorewall]") unless node[:shorewall][:skip_restart].to_s == "true"
 end
 
 order_zones()
@@ -116,7 +120,7 @@ template "/etc/shorewall/zones" do
   mode 0600
   owner "root"
   group "root"
-  notifies :restart, "service[shorewall]"
+  notifies(:restart, "service[shorewall]") unless node[:shorewall][:skip_restart].to_s == "true"
 end
 
 shorewall_enabled = [true, "true"].include?(node[:shorewall][:enabled])
