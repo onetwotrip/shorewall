@@ -1,12 +1,43 @@
 require 'ipaddr'
+require 'chef/log'
 
-# search for nodes with a specified criteria
-def search_nodes(search_criteria, mandatory=false)
+# Resolve search type from the string
+def search_type(host_string)
+  rule, criteria = host_string.split(':', 2).map {|s| s.strip}
+  rule = rule.downcase.to_sym
+  if [:search, :isystem_search].any?{|r| r == rule}
+    rule
+  else
+    :none
+  end
+end
+
+# Search for nodes with a specified criteria
+def search_nodes(search_string, mandatory=false)
+  criteria = search_string.split(':', 2)[1]
+  case search_type(search_string)
+  when :search
+    res = reduce_node_data(search(:node, criteria))
+  when :isystem_search
+    res = reduce_node_data(isystem_search(criteria))
+  else
+    return []
+  end
+  if mandatory and res.length == 0
+    Chef::Log.error("No matches for mandatory search #{search_string}")
+    raise RuntimeError.new
+  end
+  res
+end
+
+# Produce result for shorewall
+#
+def reduce_node_data(found_nodes)
   retval = []
-  search(:node, search_criteria).each do |matching_node|
+  found_nodes.each do |matching_node|
     break if matching_node == :node
     next if matching_node[:network] == nil
-    # reduce returned node information to name and network information
+    # Reduce returned node information to name and network information
     retnode = Mash.new({
       :hostname => matching_node[:hostname],
       :fqdn => matching_node[:fqdn],
@@ -14,10 +45,20 @@ def search_nodes(search_criteria, mandatory=false)
     })
     retval << retnode
   end
-  if mandatory and retval.length == 0
-    raise "no matches for mandatory search #{search_criteria}"
-  end
   return retval
+end
+
+# Use ISystem attributes to locate systems.
+# ISystem is the search infrastructure helper of Twiket Ltd.
+#
+def isystem_search(search_criteria)
+  opts = {}
+  # basically we just extract values from a string like: 'environment:env AND role:server-api AND name:main-server-group'
+  ['environment', 'role', 'name'].each do |o|
+    m = search_criteria.match(/#{o}:(.*?)( |$)/)
+    opts[o.to_sym] = m[1] if m
+  end
+  ::Infrastructure::ISystem.search_nodes(opts[:environment], opts)
 end
 
 # extract ip addresses

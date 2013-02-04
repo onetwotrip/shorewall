@@ -42,7 +42,7 @@ The following is a typical example of output (in this case, for a rules file):
     #SECTION ESTABLISHED
     #SECTION RELATED
     SECTION NEW
-                                    
+
     # Incoming SSH to firewall
     ACCEPT          all             fw              tcp     22      -               -               12/min          -       -
 
@@ -79,8 +79,8 @@ Typical usage from another module is expected to look like the following:
 
     add_shorewall_rules(
       match_nodes=[
-        ['roles:webfronts', { :name => 'web front server' }],
-        ['roles:api', { :name => 'api server' }],
+        ['search:roles:webfronts', { :name => 'web front server' }],
+        ['search:roles:api', { :name => 'api server' }],
       ],
       rules={
         :description => proc { |data| "Allow #{data[:match][:name]} #{data[:node][:hostname]} access API" },
@@ -96,11 +96,11 @@ Typical usage from another module is expected to look like the following:
 `ACCEPT` rule for each host which matches either the `webfronts` role
 or the `api` role (with different comments depending on which role
 matched). If a single host matches twice, only a single rule (for each of its
-internal IP addresses) is added. 
+internal IP addresses) is added.
 
 Notably, any of the values in the `rules` hash can be a block, in which case it
 is executed with an argument containing both the match metadata passed to the
-`match_nodes` argument and the matched node information (`:hostname`, `:fqdn` 
+`match_nodes` argument and the matched node information (`:hostname`, `:fqdn`
 and `:network`) retrieved by the search operation.
 
 Source/Destination
@@ -120,12 +120,12 @@ by the hash with 4 options.
   data in other code blocks. Default is `false`.
 
 Actually there are two ways of using `add_shorewall_rules` with and without grouping.
-The output of the first one is shown above. For grouping results just use a command
+The first example which is shown above doesn't use grouping. To group similar rules use a command
 like this:
 
     add_shorewall_rules(
     match_nodes=[
-      ['roles:webfronts', { :name => 'web front servers' }],
+      ['search:roles:webfronts', { :name => 'web front servers' }],
     ],
     rules={
       :description => proc { |data| "Allow #{data[:match][:name]} access API" },
@@ -144,7 +144,7 @@ And you will get significantly simplified output:
     # Access to zabbix active check port
     ACCEPT          lan:192.168.154.74 \
                                     fw              tcp     10050   -               -               -               -       -
-
+    
     # Allow web front servers access API
     ACCEPT          lan:192.168.0.28,192.168.0.215,192.168.0.152,192.168.0.248,192.168.0.54,192.168.0.53 \
                                     fw              tcp     8080    -               -               -               -       -
@@ -155,7 +155,7 @@ It's also worth mentioning that there is no real need in `:proc` as it was used 
 
     add_shorewall_rules(
     match_nodes=[
-      ['roles:webfronts', { :name => 'web front server' }],
+      ['search:roles:webfronts', { :name => 'web front server' }],
     ],
     rules={
       :description => proc { |data| "Allow #{data[:match][:name]} #{data[:node][:hostname]} access API" },
@@ -186,6 +186,86 @@ Alternately, an explicit rule (or policy) can be added as follows:
     }
 
 
+Advanced shorewall cookbook configuration topics
+================================================
+
+Zones order
+-----------
+
+Shorewall **zones order** is an important issue when filterening traffic. Namely the
+default zone `net` is located in the end of the zone file, since it has a capture
+for all the addresses (`0.0.0.0/0`). If we locate this zone in the begining
+all the the packets will be processed by `net` zone iptables chains and all other
+zones will simply fail to work.
+
+Shorewall cookbook has the following default zones: `fw, lan, net`. These zones
+automatically grab the specified subnet ip addresses.
+In case we want to introduce a custom zone we need to remember about the order.
+Say it, we have database servers which are part of `lan` zone. Here, we can use
+two approaches. The first one is placing `db` before `lan` zone because we need
+database servers to be processed independently of `lan` addresses.
+
+To achieve this use `shorwall.zones_order` attribute, for example it can look like
+the following:
+
+    shorewall => {
+        "zones" => [
+          { :zone => "db", :type => "ipv4" }
+        ]
+        zones_order" => "fw,db,lan,net"
+    }
+
+The `db` zone chain rules will be applied first and only afterterwards `lan` zone
+rules will be applied.
+
+The second option is to use shorewall zone nesting. Nested zones are suffixed by the colon after
+which a comma separated parent list goes - `api:lan`.
+
+Automoatic zone ordering
+------------------------
+
+Child zones must appear in the shorewall zones file after its parents. When we use zone nesting to
+configure the shorewall cookbook, the right order will be handled automatically.
+Say it we introduce `db` zone nested to `lan` zone. We always have the default order which is:
+`fw lan net` and zone nesting will be done using this predefined order.
+Just make the following configuration:
+
+    shorewall => {
+        "zones" => [
+            { :zone => "db:lan", :type => "ipv4" }
+        ]
+    }
+
+In this case we don't need to set the `zones_order` explicitly.
+
+Search for zone hosts capability
+--------------------------------
+
+Search operation is used `add_shorewall_rules` method in the `match_nodes` array. The second place
+where it's used is `zone_hosts` attribute.
+**zone_hosts** attribute is very important since it defines which hosts will the specific zone contain.
+Usually the configuration of `zone_hosts` attribite can be like this:
+
+    "shorewall" => {
+        "zone_hosts" => {
+            "db" =>  "192.168.15.10-20"
+        }
+    }
+
+Zone host string in the above sample is set statically. However we can use the search operation in here.
+There are two types of the search operations: `search` and `isystem_search`. The first one is the
+standart chef search capability, the last one is the Twiket Ltd search helper method.
+For example:
+
+    "shorewall" => {
+        "zone_hosts" => {
+            "db" =>  "search:role:database AND chef_environment:production",
+            "api" => "isystem_search:role:api AND name:main-group AND environment:testing"
+        }
+    }
+
+For `isystem_search` mind that environment must be used instead chef_environment :)
+
 Attributes
 ==========
 
@@ -204,10 +284,9 @@ works as you'd expect.
   members of this zone (when populating the shorewall `hosts` file). Otherwise,
   it can be a CIDR address (as `192.168.0.0/16` or `0.0.0.0/0`) to refer to a
   subnet.
-* `shorewall/zone_interfaces/ZONE` - maps from a shorewall zone name to the
-  Ethernet interface serving that zone. If multiple zones are mapped to the
-  same interface, then that interface will be distinguished via the shorewall
-  `hosts` file.
+* `shorewall/zone_interfaces/ZONE` - maps shorewall zone name to an ethernet
+  interface serving this zone. If multiple zones are mapped to the same interface,
+  then that interface will be distinguished via the shorewall `hosts` file.
 * `shorewall/public_zones` - forces retrieval of public ip address for explicitly
   defined rules with `node.override[:shorewall][:rules]`.
 * `shorewall/rules`, `shorewall/policy`, `shorewall/hosts`,

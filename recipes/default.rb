@@ -37,14 +37,14 @@ zones_per_interface.each_pair do |interface,zones|
       node.override[:shorewall][:interfaces] << default_settings.merge({:interface => interface})
     end
     zones.each do |zone|
-      zone_hosts = node[:shorewall][:zone_hosts][zone]
+      zone_hosts = node[:shorewall][:zone_hosts][zone].strip
       if zone_hosts != nil
-        if zone_hosts =~ /^search:(.*)$/
-          search_exp = Regexp.last_match(1)
-          public = node[:shorewall][:public_zones].include?(zone)
-          addresses = get_addresses(search_nodes(search_exp), interface, public).join(',')
-        else
+        case search_type(zone_hosts)
+        when :none
           addresses = zone_hosts
+        else
+          pub = node[:shorewall][:public_zones].include?(zone)
+          addresses = get_addresses(search_nodes(zone_hosts), interface, pub).join(',')
         end
         node.override[:shorewall][:hosts] << {
           :zone => zone,

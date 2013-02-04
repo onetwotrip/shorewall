@@ -1,7 +1,7 @@
 
 default[:shorewall][:private_ranges] = ['192.168.0.0/16', '172.16.0.0/12', '10.0.0.0/8']
 
-default[:shorewall][:enabled] = false
+default[:shorewall][:enabled] = true
 # use with caution, though shorewall configuration changes the shorewall won't be restarted
 default[:shorewall][:skip_restart] = false
 

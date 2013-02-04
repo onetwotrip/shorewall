@@ -1,26 +1,49 @@
-#
-# arrange shorewall.zones array in the right order
+# Sort shorewall zones to appear in the right order in the zones file
 #
 def order_zones()
-  zones = node[:shorewall][:zones].clone
-  node[:shorewall][:zones].clear
-  ordered = node[:shorewall][:zones_order].split(",")
-  # put zones in the specified order
-  ordered.each do |s_zone|
-    zone = zones.select { |el| el[:zone] == s_zone or el[:zone] =~ /#{s_zone}:/ }[0]
-    node.override[:shorewall][:zones] << zones.delete(zone)
-  end
-  return if zones.empty? == true
-  # more zones left which we include automatically (but if only they are nested)
-  zones.each do |zh|
-    if ! zh[:zone].include?(':')
-      Chef::Log.error("shorewall zones_order must include zone #{zh[:zone]}") && raise
+  # get zone name from a definition which is a hash, in case :zone => "data:lan" ==> "data"
+  p_zone_name = lambda{|d| d[:zone].split(':')[0]}
+  # retrieve zone definition from a given list
+  p_zone_def = lambda{|list, name| list.find {|d| p_zone_name.call(d) == name} }
+  # retrieve list of zone parents
+  p_zone_parents = lambda{|zonedef| zonedef[:zone].include?(':') ? zonedef[:zone].split(':')[1].split(',') : []}
+
+  # Make initial order which is specified with the order attribute
+  unordered = node[:shorewall][:zones].dup
+  ordered = node[:shorewall][:zones_order].split(',').map {|n| unordered.delete(p_zone_def.call(unordered, n)) }
+
+  # Make a correct order
+  while not unordered.empty? do
+    # Sort putting all zone definitions to the begining when they have all of the parents present in the ordered list
+    # Namely if we have data1:data,lan data:lan, and since lan is already in the ordered list data:lan will go first.
+    #
+    unordered = unordered.sort_by do |d|
+      parents = p_zone_parents.call(d)
+      if parents.empty?
+        Chef::Log.error("Zone `#{p_zone_name.call(d)}` must be either nested or explicitly present in `zones_order` attribute")
+        raise RuntimeError.new
+      end
+      parents.none? {|p| p_zone_def.call(ordered, p).nil?} ? -1 : 0
     end
-    parent_zone = zh[:zone].split(":")[1]
-    i = node[:shorewall][:zones].index { |el| el[:zone] == parent_zone }
-    node[:shorewall][:zones].insert(i+1, zh)
+    to_ordered = unordered.shift
+
+    # Get the latest parent of the nested zone
+    begin
+      # Get the maximum index of a parent in ordered list and put the child stright after his parenent
+      latest = p_zone_parents.call(to_ordered).map {|name| ordered.index{|e| p_zone_name.call(e) == name}}.max
+      ordered.insert(latest+1, to_ordered)
+    rescue
+      not_defined = p_zone_parents.call(to_ordered).find {|name| p_zone_def.call(node[:shorewall][:zones], name) == nil}
+      Chef::Log.error("Zone `#{not_defined}` is not defined, check zones configuration")
+      raise RuntimeError.new
+    end
   end
+
+  # Save zones in an ordered manner into the override attributes
+  node[:shorewall][:zones].clear
+  ordered.each {|e| node.override[:shorewall][:zones] << e}
 end
+
 
 def shorewall_format_file(column_defs, data)
   retval = ''
