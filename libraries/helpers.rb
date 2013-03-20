@@ -28,7 +28,7 @@ module Shorewall
       zones_by_interface.each do |eth, zones|
         # we don't have an interface configuration yet, so we create it
         unless node['shorewall']['interfaces'].any? {|h| h['interface'] == eth }
-          node.default['shorewall']['interfaces'] << default_settings.merge({'interface' => eth})
+          node.default['shorewall']['interfaces'] << interface_settings(eth)
 
           # we've got an interface with the one sole zone
           if zones.size == 1
@@ -99,9 +99,11 @@ module Shorewall
 
     # Compose default interface settings with symbloized keys
     #
-    def default_settings
-      @default_settings ||= node['shorewall']['default_interface_settings'].keys.inject({}) do |h, k|
-        h[k.to_sym] = node['shorewall']['default_interface_settings'][k]; h
+    def interface_settings(eth)
+      if node['shorewall']['interface_settings'].has_key?(eth)
+        node['shorewall']['interface_settings'][eth].merge({:interface => eth})
+      else
+        node['shorewall']['interface_settings']['default'].merge({:interface => eth})
       end
     end
 

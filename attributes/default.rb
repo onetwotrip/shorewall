@@ -25,8 +25,8 @@ default['shorewall']['zone_interfaces']['lan'] = "eth0"
 default['shorewall']['zone_hosts']['lan'] = "search:*.*"
 default['shorewall']['zone_hosts']['net'] = "0.0.0.0/0"
 
-default['shorewall']['default_interface_settings']['broadcast'] = "detect"
-default['shorewall']['default_interface_settings']['options']   = "tcpflags,blacklist,routefilter,nosmurfs,logmartians,dhcp"
+default['shorewall']['interface_settings']['default'] = {:broadcast => 'detect',
+                                                         :options   => 'tcpflags,blacklist,routefilter,nosmurfs,logmartians,dhcp'}
 
 default['shorewall']['actions'] = [ 'Limit' ]
 
