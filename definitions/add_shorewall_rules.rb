@@ -1,5 +1,5 @@
 #
-# Author:: Denis Barishev (<joshua@opscode.com>)
+# Author:: Denis Barishev (<denis.barishev@gmail.com>)
 # Cookbook Name:: shorewall
 # Definition:: add_shorewall_rules
 #
@@ -25,8 +25,7 @@ define :add_shorewall_rules, :match_nodes => [], :rules => [] do
     found  = Shorewall.search({
       :rule      => search_criteria,
       :interface => stanza[:interface],
-      :public    => stanza[:public],
-      :node      => node
+      :public    => stanza[:public]
     })
 
     # rules we expect as a hash or maybe array of hashes

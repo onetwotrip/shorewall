@@ -1,5 +1,5 @@
 #
-# Author:: Denis Barishev (<joshua@opscode.com>)
+# Author:: Denis Barishev (<denis.barishev@gmail.com>)
 # Cookbook Name:: shorewall
 # Attribute:: default
 #
@@ -17,8 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-default['shorewall']['enabled']       = false
-default['shorewall']['skip_restart']  = true
+default['shorewall']['enabled']       = true
+default['shorewall']['skip_restart']  = false
 
 default['shorewall']['zone_interfaces']['net'] = "eth0"
 default['shorewall']['zone_interfaces']['lan'] = "eth0"

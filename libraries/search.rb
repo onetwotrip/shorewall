@@ -42,7 +42,7 @@ module Shorewall
         Array(@config[:rule])
       else
         if Chef::Config[:solo]
-          Chef::Log.error("Shorewall node search doesn't work with chef-solo")
+          Chef::Log.warn("Shorewall node search doesn't work with chef-solo, will end up with an empty result")
           return []
         end
         find_nodes do |nodes|

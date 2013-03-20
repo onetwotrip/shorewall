@@ -1,5 +1,5 @@
 #
-# Author:: Denis Barishev (<joshua@opscode.com>)
+# Author:: Denis Barishev (<denis.barishev@gmail.com>)
 # Cookbook Name:: shorewall
 # Library:: helpers
 #
@@ -43,8 +43,7 @@ module Shorewall
           result = Shorewall.search({
             :rule      => search_rule,
             :interface => eth,
-            :public    => is_public?(zone),
-            :node      => node
+            :public    => is_public?(zone)
           })
           node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{result.join(',')}"}
         end
