@@ -3,19 +3,16 @@
 # Definition:: action
 #
 
-define :shorewall_action, :action => :create do
-  aname = params[:name]
-  cookbook = params[:cookbook] || self.cookbook_name
-  file "/etc/shorewall/action.#{aname}" do
-    action params[:action]
-  end
-  cookbook_file "/etc/shorewall/#{aname}" do
-    mode 0600
-    owner 'root'
-    group 'root'
-    source params[:source]
-    action params[:action]
-    notifies(*params[:notifies]) if params[:notifies]
-    cookbook cookbook
+define :shorewall_action do
+  params[:cookbook] ||= self.cookbook_name.to_s
+
+  file "/etc/shorewall/action.#{params[:name]}"
+
+  cookbook_file "/etc/shorewall/#{params[:name]}" do
+    mode      0600
+    owner     'root'
+    group     'root'
+    source    params[:source]
+    cookbook  params[:cookbook]
   end
 end

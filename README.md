@@ -5,21 +5,6 @@ Shorewall is a rather comprehensive and easy-to-use abstraction layer on top of
 iptables.
 
 
-Requirements
-============
-
-This cookbook must use the `yumrepo` module to install the EPEL
-repository when run on CentOS-specific. Also it was adapted to run on Ubuntu/Debian.
-
-The library functions anticipate a network topology in which a cluster of
-servers have interconnects over a "private" network which is sufficiently
-insecure that a firewall is appropriate to control connections from that
-subnet. (This particularly applies to services such as memcached which expect
-security to handled at a different layer). However, the module is expected to
-remain useful in other scenarios as well.
-Now the library functions recognize what addresses they should extract pubic or private.
-
-
 Capabilities
 ============
 
@@ -28,46 +13,7 @@ comparable to hand-written ones.
 
 The following is a typical example of output (in this case, for a rules file):
 
-    #
-    # Shorewall version 4 - Rules File
-    #
-    # For information on the settings in this file, type "man shorewall-rules"
-    #
-    # The manpage is also online at
-    # http://www.shorewall.net/manpages/shorewall-rules.html
-    #
-    ############################################################################################################################
-    #ACTION         SOURCE          DEST            PROTO   DEST    SOURCE          ORIGINAL        RATE            USER/   MARK
-    #                                                       PORT    PORT(S)         DEST            LIMIT           GROUP
-    #SECTION ESTABLISHED
-    #SECTION RELATED
-    SECTION NEW
-
-    # Incoming SSH to firewall
-    ACCEPT          all             fw              tcp     22      -               -               12/min          -       -
-
-    # Access to API from other API nodes
-    ACCEPT          api             fw              tcp     8080    -               -               -               -       -
-
-    # Public access to API from web front-ends
-    ACCEPT          wwwf            fw              tcp     8100    -               -               -               -       -
-
-    # Access to zabbix active check port
-    ACCEPT          lan:192.168.0.74 \
-                                    fw              tcp     10050   -               -               -               -       -
-
-    # Allow api server appl01 access API
-    ACCEPT          lan:192.168.0.28 \
-                                    fw              tcp     8080    -               -               -               -       -
-
-    # Allow api server appl05 access API
-    ACCEPT          lan:192.168.0.215 \
-                                    fw              tcp     8080    -               -               -               -       -
-
-    # Allow api server appl00 access API
-    ACCEPT          lan:192.168.0.152 \
-                                    fw              tcp     8080    -               -               -               -       -
-
+    :::TODO:::
 
 Note how line continuations are added as necessary to keep column alignment in place.
 
@@ -75,6 +21,7 @@ Note how line continuations are added as necessary to keep column alignment in p
 Usage
 =====
 
+Shorewall is configured b
 Typical usage from another module is expected to look like the following:
 
     add_shorewall_rules(
@@ -308,5 +255,4 @@ Patches to address any of these items would be gratefully accepted.
 
 Authors
 =======
-* Charles Duffy, charles@poweredbytippr.com
 * Denis Barishev, denis.barishev@gmail.com

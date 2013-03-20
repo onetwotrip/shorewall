@@ -1,13 +1,13 @@
-maintainer		'Denis Barishev'
-maintainer_email	'denz@twiket.com'
-license			"Apache 2.0"
-description		"Configures iptables with Shorewall"
+maintainer		    "Denis Barishev"
+maintainer_email	"denz@twiket.com"
+license			      "Apache 2.0"
+description		    "Configures iptables with Shorewall"
 long_description	IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version			'0.1.0'
+version			      "0.11.0"
 
 recipe "shorewall", "Configures and activates Shorewall firewall"
 
-%w{centos ubuntu debian}.each do |dep|
+%w{ubuntu debian}.each do |dep|
   supports dep
 end
 
