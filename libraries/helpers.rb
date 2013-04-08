@@ -54,14 +54,10 @@ module Shorewall
     # Generate and check shorewall config stanza (for add_shorewall_rules)
     #
     def self.config_stanza(config = {})
-      opts     = [:name, :public, :interface]
       defaults =  {
         :public => false
       }
-      config   = Mash.new(defaults).merge(config)
-      notfound = opts.find {|s| config[s].nil?}
-      raise RuntimeError.new("Shorewall config stanza requires the :#{notfound} option!") if notfound 
-      config
+      Mash.new(defaults).merge(config)
     end
 
     # Compute the value of shorewall rule (for add_shorewall_rules)

@@ -34,7 +34,7 @@ module Shorewall
     PRIVATE_RANGES = ['192.168.0.0/16', '172.16.0.0/12', '10.0.0.0/8'].map {|ip| IPAddr.new(ip)}
 
     def initialize(config={})
-      @config = Mash.new(config)
+      @config = Shorewall::Helpers.config_stanza(config)
     end
 
     def execute
@@ -45,6 +45,7 @@ module Shorewall
           Chef::Log.warn("Shorewall node search doesn't work with chef-solo, will end up with an empty result")
           return []
         end
+        check_config_stanza!
         find_nodes do |nodes|
           retrieve_ipaddrs(nodes)
         end
@@ -111,6 +112,12 @@ module Shorewall
     # Execute the default chef search method to lookup nodes
     def search_chef
       search(:node, @search_rule)
+    end
+
+    def check_config_stanza!
+      opts     = [:name, :public, :interface]
+      notfound = opts.find {|s| @config[s].nil?}
+      raise RuntimeError.new("Shorewall config stanza requires the :#{notfound} option!") if notfound
     end
   end
 
