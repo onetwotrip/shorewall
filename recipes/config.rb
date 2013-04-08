@@ -33,8 +33,8 @@ end
 self.send(:extend, Shorewall::Helpers)
 self.configure_shorewall
 
-if node['shorewall']['skip_restart']
-  Chef::Log.warn("recipe[#{cookbook_name}::#{recipe_name}] skip_restart is enabled, skipping the shorewall restart!")
+if node['shorewall']['skip_restart'] || !node['shorewall']['enabled']
+  Chef::Log.warn("recipe[#{cookbook_name}::#{recipe_name}] skipping the shorewall restart due to configuration")
   restart_action = :nothing
 end
 
