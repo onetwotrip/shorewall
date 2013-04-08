@@ -30,7 +30,7 @@ Typical usage of the definition is expected to look like the following:
       rules({
         :description => proc {|data| "Allow #{data[:name]} access API" },
         :action => :ACCEPT,
-        :source => proc {|data| "#{data[:zone}"}:#{data[:matched_hosts]}
+        :source => proc {|data| "#{data[:zone]}:#{data[:matched_hosts]}"},
         :dest => :fw,
         :proto => :tcp,
         :dest_port => 8080
