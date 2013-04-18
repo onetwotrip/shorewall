@@ -70,7 +70,7 @@ module Shorewall
     def search_type
       @search_type ||=  case @config[:rule]
                         when String
-                          type, criteria = @config[:rule].split(':')
+                          type, criteria = @config[:rule].split(':', 2)
                           if type == 'search'
                             @config[:rule] = criteria
                             :chef
@@ -111,11 +111,11 @@ module Shorewall
 
     # Execute the default chef search method to lookup nodes
     def search_chef
-      search(:node, @search_rule)
+      search(:node, @config[:rule])
     end
 
     def check_config_stanza!
-      opts     = [:name, :public, :interface]
+      opts     = [:rule, :public, :interface]
       notfound = opts.find {|s| @config[s].nil?}
       raise RuntimeError.new("Shorewall config stanza requires the :#{notfound} option!") if notfound
     end
