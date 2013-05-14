@@ -40,24 +40,14 @@ module Shorewall
         zones.each do |zone|
           search_rule = node['shorewall']['zone_hosts'][zone].to_s
           next if search_rule.empty?
-          result = Shorewall.search({
-            :rule      => search_rule,
-            :interface => eth,
-            :public    => is_public?(zone)
-          })
+          result = Shorewall.search(search_rule, {
+              :interface => eth,
+              :public    => is_public?(zone)
+            })
           node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{result.join(',')}"}
         end
       end
       sort_nested_zones
-    end
-
-    # Generate and check shorewall config stanza (for add_shorewall_rules)
-    #
-    def self.config_stanza(config = {})
-      defaults =  {
-        :public => false
-      }
-      Mash.new(defaults).merge(config)
     end
 
     # Compute the value of shorewall rule (for add_shorewall_rules)
