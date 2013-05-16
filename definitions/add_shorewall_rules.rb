@@ -21,10 +21,7 @@ define :add_shorewall_rules, :match_nodes => [], :rules => [] do
 
   # match_nodes we expect as an array or a nested array, so flatten and slice it
   params[:match_nodes].flatten.each_slice(2) do |search_rule, data|
-    found  = Shorewall.search(search_rule, {
-        :interface => data[:interface],
-        :public    => data[:public]
-      })
+    found  = Shorewall.search(search_rule, data)
 
     # rules we expect as a hash or maybe array of hashes
     (params[:rules].respond_to?(:has_key?) ? [params[:rules]] : params[:rules]).each do |rule|

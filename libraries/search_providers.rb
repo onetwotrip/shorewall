@@ -56,8 +56,8 @@ module Shorewall
       end
 
       def find_nodes
-        fake_find
-        #search(:node, @search.split(':', 2).last)
+        #fake_find
+        search(:node, @search.split(':', 2).last)
       end
 
       def fake_find
@@ -73,35 +73,35 @@ module Shorewall
         if @options[:interface].to_s.empty?
           Chef::Log.error("You must provide :interface option for #{self.class}")
           raise RuntimeError.new("#{self.class} wrong search options!")
-        end        # Dir.chdir('/home/denz/forge/tmp/nodes') do
-        res = Dir.chdir('/vagrant/nodes') do
-          Dir.glob("*").map do |fn|
-            ::JSON.parse(IO.read(fn)).to_hash['automatic']
-          end
         end
       end
 
       # == retrieve_addresses exracts all matched address of the specified interface.
       #
       def retrieve_addresses(node)
+        # filter out either private or public addresses (by default private is processed)
+        addresses_on_physinterface(node, @options[:interface]).select do |ip|
+          @options[:public] ^ PRIVATE_RANGES.any? {|range| range.include?(ip)}
+        end
+      end
+
+      # get address of the physical interface (not alias)
+      #
+      def addresses_on_physinterface(node, interface)
         addresses = []
         begin
           node['network']['interfaces'].each do |eth, opts|
             # aliased interfaces are the same entity for shorewall
             eth = eth.split(':').first
-            next unless eth == @options[:interface]
+            next unless eth == interface
             opts['addresses'].each do |ip, eth_opts|
               addresses << IPAddr.new(ip) if eth_opts['family'] == 'inet'
             end
           end
         rescue
-          Chef::Log.warn("Shorewall search couldn't get ip addresses for #{node} on #{@options[:interface]} interface")
+          Chef::Log.warn("Shorewall search couldn't get ip addresses for #{node} on #{interface} interface")
         end
-
-        # filter out either private or public addresses (by default private is processed)
-        addresses.select do |ip|
-          @options[:public] ^ PRIVATE_RANGES.any? {|range| range.include?(ip)}
-        end
+        addresses
       end
     end
 

@@ -108,7 +108,7 @@ module Shorewall
 
       # sort zones acording to the shorewall zones nesting
       while !unordered.empty? do
-        
+
         # if we have data1:data,lan data:lan and since lan is already in the ordered list data:lan will go first.
         unordered = unordered.sort_by do |zdef|
           parents = _get_zone_parents(zdef)

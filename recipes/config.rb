@@ -45,7 +45,7 @@ node['shorewall']['actions'].each do |name|
 end
 
 # Create shorewall configuration files
-[ 
+[
   'actions',
   'hosts',
   'interfaces',
@@ -62,7 +62,7 @@ end
     notifies  restart_action, "service[shorewall]"
   end
 
-end  
+end
 
 template "/etc/shorewall/shorewall.conf" do
   source "shorewall.conf.erb"

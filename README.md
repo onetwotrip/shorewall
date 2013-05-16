@@ -35,7 +35,8 @@ Typical usage of the definition is expected to look like the following:
         :proto => :tcp,
         :dest_port => 8080
       })
-    
+    end
+
 
 ...in the above case, we're using the `add_shorewall_rules` definition to `ACCEPT` connections to port *8080*. `match_nodes` stanza can accept one *match item* or more like in our case. We've used two *match items* consequently there will be two *rules* generated. The same is valid for `rules`, you can pass one hash or an array of hashes. Basically if you do so you get all of the *rules* generated for each *match item*.
 
@@ -89,14 +90,14 @@ But relax we've already defined zones as nested what means that the shorewall co
  - `shorewall/zones` - sets up the shorewall zone configuration (array of hashes). Three zones are created by default: **fw, lan, net**.
  - `shorewall/policy` - shorewall policy (array of hashes).
  - `shorewall/zones_order` - order of zones which will be used when writing the shorewall zones file. The order should respect parents which are supposed to go first. Default is **"fw,lan,net"**.
- - `shorewall/interface_settings/INTERFACE` - shorewall interface settings like broadcast and options, it already has the default value `shorewall.interface_settings.default`. However it can have per-interface setting, just add your interface to the `shorewall.interface_settings` hash. 
+ - `shorewall/interface_settings/INTERFACE` - shorewall interface settings like broadcast and options, it already has the default value `shorewall.interface_settings.default`. However it can have per-interface setting, just add your interface to the `shorewall.interface_settings` hash.
  - `shorewall/enabled` - the state of shorewall service enabled/disabled. By default, it's set to `true`.
  - `shorewall/zone_hosts/ZONE` - specifies the rule for setting up a particular zone. By default, for **lan, net** zones it's set to **"search:\*.\*"** and **"0.0.0.0/0"** respectively.
  - `shorewall/zone_interfaces/ZONE` - specify the interface where particular zone resides. Defaults **"lan" => "eth0", "net" => "eth0"**.
  - `shorewall/public_zones` - specify that the public ip address will be retrieved for a zone (array). By default the zone **net** is only included.
  - `shorewall/rules`, `shorewall/policy`, `shorewall/hosts`, `shorewall/interfaces` configure the relevant shorewall files.
 
-*Important:* In previuos version of cookbook there were many override attributes. The new version of cookbook is suppused to run on chef11 which doesn't have weird attribute behaviour. So all of the attributes are set back to default level of precedence. Be aware if you override some attribute now it will loose it's default values. 
+*Important:* In previuos version of cookbook there were many override attributes. The new version of cookbook is suppused to run on chef11 which doesn't have weird attribute behaviour. So all of the attributes are set back to default level of precedence. Be aware if you override some attribute now it will loose it's default values.
 
 For more details, see the `attributes/default.rb` file.
 

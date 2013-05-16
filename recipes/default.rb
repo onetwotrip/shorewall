@@ -29,17 +29,3 @@ service "shorewall" do
               [:disable]
             end
 end
-
-add_shorewall_rules "match api and web servers" do
-  match_nodes(
-    ['search:roles:api', {:name => 'api server', :interface => 'eth0', :zone => 'lan', :public => true}],
-  )
-  rules({
-    :description => proc {|data| "Allow #{data[:name]} access API" },
-    :action => :ACCEPT,
-    :source => proc {|data| "#{data[:zone]}:#{data[:matched_hosts]}"},
-    :dest => :fw,
-    :proto => :tcp,
-    :dest_port => 8080
-  })
-end
