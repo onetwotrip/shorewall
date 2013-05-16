@@ -38,12 +38,21 @@ module Shorewall
         end
         # we configure an interface with multiple zones
         zones.each do |zone|
-          search_rule = node['shorewall']['zone_hosts'][zone].to_s
-          next if search_rule.empty?
-          result = Shorewall.search(search_rule, {
+          options = {}
+          builtin = ['no_search', 'chef_search']
+          osearch = node['shorewall']['zone_hosts'][zone]
+
+          search_rule = Shorewall::SearchRule.new(osearch, {})
+          next if search_rule.rule.empty?
+
+          if builtin.include?(search_rule.type)
+            options = {
               :interface => eth,
               :public    => is_public?(zone)
-            })
+            }
+          end
+
+          result = Shorewall.search(osearch, options)
           node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{result.join(',')}"}
         end
       end
@@ -128,7 +137,7 @@ module Shorewall
         rescue
           notfound = _get_zone_parents(to_ordered).find {|name| _zonedef(node['shorewall']['zones'], name).nil?}
           Chef::Log.error("Shorewall zone `#{notfound}` is not defined, check zones configuration")
-          raise RuntimeError.new
+          raise RuntimeError.new("Shorewall zone #{notfound} not defined")
         end
       end
 

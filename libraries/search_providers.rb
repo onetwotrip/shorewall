@@ -17,7 +17,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'chef/mash'
 require 'chef/config'
 require 'chef/log'
 require 'chef/dsl/data_query'
@@ -32,14 +31,14 @@ module Shorewall
     # Rule must not begin with "search:xxx" (which is used for the default chef search operation)
     #
     class StaticSearch < Provider
-      def self.verify_rule?(search_rule)
-        search_rule.is_a?(String) && search_rule.split(':', 2).first != "search"
+      def self.is_type?(search_rule)
+        search_rule.type == 'no_search'
       end
 
       # == return just the search string, because no actual search must be executed
       #
       def execute
-        Array(@search)
+        Array(@search_rule.rule)
       end
     end
 
@@ -51,13 +50,13 @@ module Shorewall
 
       PRIVATE_RANGES = ['192.168.0.0/16', '172.16.0.0/12', '10.0.0.0/8'].map {|ip| IPAddr.new(ip)}
 
-      def self.verify_rule?(search_rule)
-        search_rule.is_a?(String) && search_rule.split(':', 2).first == "search"
+      def self.is_type?(search_rule)
+        search_rule.type == 'chef_search'
       end
 
       def find_nodes
-        #fake_find
-        search(:node, @search.split(':', 2).last)
+        fake_find
+        #search(:node, @search.split(':', 2).last)
       end
 
       def fake_find
@@ -70,7 +69,7 @@ module Shorewall
       end
 
       def check
-        if @options[:interface].to_s.empty?
+        if @search_rule.options[:interface].to_s.empty?
           Chef::Log.error("You must provide :interface option for #{self.class}")
           raise RuntimeError.new("#{self.class} wrong search options!")
         end
@@ -80,8 +79,8 @@ module Shorewall
       #
       def retrieve_addresses(node)
         # filter out either private or public addresses (by default private is processed)
-        addresses_on_physinterface(node, @options[:interface]).select do |ip|
-          @options[:public] ^ PRIVATE_RANGES.any? {|range| range.include?(ip)}
+        addresses_on_physinterface(node, @search_rule.options[:interface]).select do |ip|
+          @search_rule.options[:public] ^ PRIVATE_RANGES.any? {|range| range.include?(ip)}
         end
       end
 

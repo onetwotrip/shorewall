@@ -17,18 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'chef/mash'
+
 module Shorewall
 
   class Provider
 
-    def initialize(search_rule, options)
-      @search  =  case search_rule
-                  when Hash
-                    Mash.new(search_rule)
-                  else
-                    search_rule
-                  end
-      @options =  Mash.new(options)
+    def initialize(search_rule)
+      @search_rule = search_rule
     end
 
     def self.search_providers
@@ -39,11 +35,11 @@ module Shorewall
       search_providers.push(child) if !search_providers.include?(child)
     end
 
-    def self.create_instance(search, options)
+    def self.create_instance(search_rule)
       search_providers.each do |pklass|
-        return pklass.new(search, options) if pklass.verify_rule?(search)
+        return pklass.new(search_rule) if pklass.is_type?(search_rule)
       end
-      raise RuntimeError.new("No provider found for #{search}")
+      raise RuntimeError.new("No provider found for search type `#{search_rule.type}'")
     end
 
     def execute
@@ -65,7 +61,7 @@ module Shorewall
       raise NotImplementedError.new("#{self.class} find_nodes method not implemented!")
     end
 
-    def self.verify_rule?(search_rule)
+    def self.is_type?(search_rule)
       raise NotImplementedError.new("#{self} is_type? class method not implemented!")
     end
   end
