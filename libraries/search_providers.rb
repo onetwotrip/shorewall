@@ -55,17 +55,7 @@ module Shorewall
       end
 
       def find_nodes
-        fake_find
-        #search(:node, @search.split(':', 2).last)
-      end
-
-      def fake_find
-        # Dir.chdir('/home/denz/forge/tmp/nodes') do
-        res = Dir.chdir('/vagrant/nodes') do
-          Dir.glob("*").map do |fn|
-            ::JSON.parse(IO.read(fn)).to_hash['automatic']
-          end
-        end
+        search(:node, @search_rule.rule)
       end
 
       def check

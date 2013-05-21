@@ -42,8 +42,12 @@ module Shorewall
           builtin = ['no_search', 'chef_search']
           osearch = node['shorewall']['zone_hosts'][zone]
 
+          if osearch.nil?
+            Chef::Log.warn("Shorewall zone_hosts configuration is not defined for the zone #{zone}")
+            next
+          end
+
           search_rule = Shorewall::SearchRule.new(osearch, {})
-          next if search_rule.rule.empty?
 
           if builtin.include?(search_rule.type)
             options = {
