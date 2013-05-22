@@ -109,7 +109,6 @@ module Shorewall
     # Sort shorewall.zones array to set the right shorewall order
     #
     def sort_nested_zones
-      #binding.pry
       # create the initial order of zones acording to the default order - shorewall.zones_order
       notdefined = []
       unordered  = node['shorewall']['zones'].dup
