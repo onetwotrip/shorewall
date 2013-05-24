@@ -109,13 +109,14 @@ module Shorewall
     # Sort shorewall.zones array to set the right shorewall order
     #
     def sort_nested_zones
-      # create the initial order of zones acording to the default order - shorewall.zones_order
+      # create initial arrays of already ordered zones and not yet ordered
       notdefined = []
-      unordered  = node['shorewall']['zones'].dup
+      unordered  = JSON.parse(node['shorewall']['zones'].to_json) # make a deep copy of the zones hash
+
       ordered    = node['shorewall']['zones_order'].split(',').map do |z|
-        if unordered.delete(_zonedef(unordered, z)).nil?
-          notdefined << z
-        end
+        ordered_zone = unordered.delete(_zonedef(unordered, z))
+        notdefined << z if ordered_zone.nil?
+        ordered_zone
       end
 
       # check if we supplied the propper shorewall.zones definitions
@@ -155,7 +156,7 @@ module Shorewall
     end
 
     def _zonename(zonedef)
-      zonedef[:zone].split(':').first
+      zonedef['zone'].split(':').first
     end
 
     def _zonedef(list, zone)
@@ -163,7 +164,7 @@ module Shorewall
     end
 
     def _get_zone_parents(zonedef)
-      zonedef[:zone].include?(':') ? zonedef[:zone].split(':').last.split(',') : []
+      zonedef['zone'].include?(':') ? zonedef['zone'].split(':').last.split(',') : []
     end
 
   end
