@@ -48,7 +48,7 @@ module Shorewall
       find_nodes.each do |node|
         hosts += retrieve_addresses(node)
       end
-      hosts.uniq.map {|ip| ip.to_s}
+      hosts.uniq.sort.map {|ip| ip.to_s}
     end
 
     def check; end
