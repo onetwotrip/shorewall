@@ -39,7 +39,7 @@ module Shorewall
         # we configure an interface with multiple zones
         zones.each do |zone|
           options = {}
-          builtin = ['no_search', 'chef_search']
+          builtin = [:nosearch, :chefsearch]
           osearch = node['shorewall']['zone_hosts'][zone]
 
           if osearch.nil?

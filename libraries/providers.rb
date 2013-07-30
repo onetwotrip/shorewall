@@ -22,39 +22,26 @@ require 'chef/log'
 require 'chef/dsl/data_query'
 require 'ipaddr'
 
-require 'json'
-
 module Shorewall
   class Provider
 
-    # StaticSearch uses the rule of String type.
-    # Rule must not begin with "search:xxx" (which is used for the default chef search operation)
+    # Provider substitues back its search rule, no search is performed
     #
-    class StaticSearch < Provider
-      def self.is_type?(search_rule)
-        search_rule.type == 'no_search'
-      end
-
-      # == return just the search string, because no actual search must be executed
-      #
+    class NoSearch < Provider
       def execute
         Array(@search_rule.rule)
       end
     end
 
-    # ChefSearch class uses chef search facility to find nodes in chef
-    # and extract needed ip addresses from the given network interface
+    # Search provider uses standart chef search to locate node.
+    # Extracts address of the given interface.
     #
     class ChefSearch < Provider
       include Chef::DSL::DataQuery
 
       PRIVATE_RANGES = ['192.168.0.0/16', '172.16.0.0/12', '10.0.0.0/8'].map {|ip| IPAddr.new(ip)}
 
-      def self.is_type?(search_rule)
-        search_rule.type == 'chef_search'
-      end
-
-      def find_nodes
+      def search_nodes
         search(:node, @search_rule.rule)
       end
 
@@ -65,24 +52,19 @@ module Shorewall
         end
       end
 
-      # == retrieve_addresses exracts all matched address of the specified interface.
-      #
-      def retrieve_addresses(node)
-        # filter out either private or public addresses (by default private is processed)
-        addresses_on_physinterface(node, @search_rule.options[:interface]).select do |ip|
+      # Filter out either private or public addresses of an interface (by default private is processed)
+      def extract_addresses(node)
+        pif_addresses(node, @search_rule.options[:interface]).select do |ip|
           @search_rule.options[:public] ^ PRIVATE_RANGES.any? {|range| range.include?(ip)}
         end
       end
 
-      # get address of the physical interface (not alias)
-      #
-      def addresses_on_physinterface(node, interface)
+      # Get address of a physical interface (including all aliased interfaces)
+      def pif_addresses(node, interface)
         addresses = []
         begin
           node['network']['interfaces'].each do |eth, opts|
-            # aliased interfaces are the same entity for shorewall
-            eth = eth.split(':').first
-            next unless eth == interface
+            next unless eth.split(':').first == interface
             opts['addresses'].each do |ip, eth_opts|
               addresses << IPAddr.new(ip) if eth_opts['family'] == 'inet'
             end

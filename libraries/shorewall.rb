@@ -21,16 +21,16 @@ require 'chef/mash'
 
 module Shorewall
 
-  # SearchRule the search configuration placeholder class
-  #
+  # SearchRule search configuration class
   class SearchRule
-    attr_accessor :rule, :type, :options
+    attr_reader :rule, :type, :options
 
     def initialize(search, options)
-      # a custom rule is hash, here we store rule and options in the same mash
       if search.kind_of?(Hash)
+        # a custom rule is hash, here we store rule and options in the same mash
+
         mash  = Mash.new(search)
-        @type = mash.delete(:search)
+        @type  = mash.delete(:search).to_sym
         @rule = mash.merge(Mash.new(options))
         @options = @rule
 
@@ -38,10 +38,10 @@ module Shorewall
       elsif search.is_a?(String)
         prefix, solrstr = search.split(":", 2)
         if prefix == "search"
-          @type = "chef_search"
+          @type = :chefsearch
           @rule = solrstr
         else
-          @type = "no_search"
+          @type = :nosearch
           @rule = search
         end
         @options = Mash.new(options)
@@ -49,9 +49,14 @@ module Shorewall
         raise NotImplementedError.new("#{self.class} unsuported search expression type #{search.class}")
       end
     end
+
+    # Create search provider instance
+    def create_search_instance
+      Provider.klass(@type).new(self)
+    end
   end
 
   def self.search(search, options = {})
-    Provider.create_instance(SearchRule.new(search, options)).execute
+    SearchRule.new(search, options).create_search_instance.execute
   end
 end
