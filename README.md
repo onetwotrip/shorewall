@@ -96,7 +96,7 @@ You can use roles or environments to set up attributes.
 
 This is the paste of a role default attributes section.
 
-# Zone odering
+# Zone ordering
 
 Shorewall **zones order** is an important configuration issue. Namely the default zone `net` is located in the end of the zone file, since it has a capture for all the addresses (`0.0.0.0/0`). Putting the `net` zone in the begining we will end up with all the packets going to its corresponding iptables chain.
 
@@ -116,7 +116,7 @@ But relax maybe we don't need to give the order attribute. We've already defined
  - `shorewall/public_zones` - specify that the public ip address will be retrieved for a zone (array). By default the zone **net** is only included.
  - `shorewall/rules`, `shorewall/policy`, `shorewall/hosts`, `shorewall/interfaces` configure the relevant shorewall files.
 
-*Important:* In previuos version of cookbook there were many override attributes. The new version of cookbook is suppused to run on chef11 which doesn't have weird attribute behaviour. So all of the attributes are set back to default level of precedence. Be aware if you override some attribute now it will loose it's default values.
+**Important:** In previuos version of cookbook there were many override attributes. The new version of cookbook is suppused to run on chef11 which doesn't have weird attribute behaviour. So all of the attributes are set back to default level of precedence. Be aware if you override some attribute now it will loose it's default values.
 
 For more details, see the `attributes/default.rb` file.
 
