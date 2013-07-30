@@ -10,7 +10,26 @@ comparable to hand-written ones.
 
 The following is a typical example of output (in this case, for a rules file):
 
-    :::TODO:::
+    #
+    # Shorewall version 4 - Rules File
+    #
+    # For information on the settings in this file, type "man shorewall-rules"
+    #
+    # The manpage is also online at
+    # http://www.shorewall.net/manpages/shorewall-rules.html
+    #
+    ############################################################################################################################
+    #ACTION         SOURCE          DEST            PROTO   DEST    SOURCE          ORIGINAL        RATE            USER/   MARK
+    #                                                       PORT    PORT(S)         DEST            LIMIT           GROUP
+    #SECTION ESTABLISHED
+    #SECTION RELATED
+    SECTION NEW
+
+    # Incoming SSH to firewall
+    Limit:none:SSHA,5,60 \
+                    all             fw              tcp     22      -               -               -               -       -
+
+    #LAST LINE -- ADD YOUR ENTRIES BEFORE THIS ONE -- DO NOT REMOVE
 
 Note how line continuations are added as necessary to keep column alignment in place.
 
@@ -43,7 +62,7 @@ Typical usage of the definition is expected to look like the following:
 Notably, any of the values in the `rules` hash can be a block, in which case it
 is executed with a hash argument containing both the match data, retrieved with the **matched_hosts**  key and all those values you passed via match item options hash.
 
-Futher more the shorewall cookbook search implementaion was havily reworked and now it provides puggable search capability. You can pass a hash configuring user defined search operation. For how to achieve this dive into the library code:)
+Futher more the shorewall cookbook search implementaion was heavily reworked and now it provides puggable search capability. You can pass a hash configuring user defined search operation. For how to achieve this dive into the library code:)
 
 
 # Explicit configuration via role/environment attributes
@@ -81,9 +100,9 @@ This is the paste of a role default attributes section.
 
 Shorewall **zones order** is an important configuration issue. Namely the default zone `net` is located in the end of the zone file, since it has a capture for all the addresses (`0.0.0.0/0`). Putting the `net` zone in the begining we will end up with all the packets going to its corresponding iptables chain.
 
-The shorewall cookbook gives you a capabilty to define the desired order with the `shorewall.zones_order` attribute which is **"fw,lan,net"** by default. Just set the order by providing the string like "fw,lan,api,webf,net". As you could probably noticed there are two zones mentioned in the previous section. These zones are nested shorewall zones defined like "child:parant[,parent]".
+The shorewall cookbook gives you a capabilty to define the desired order with the `shorewall.zones_order` attribute which is **"fw,lan,net"** by default. Just set the order by providing the string like "fw,lan,api,webf,net".
 
-But relax we've already defined zones as nested what means that the shorewall cookbook will automatically determine the right order for you. Leave the `shorewall.zones_order` alone in this case.
+But relax maybe we don't need to give the order attribute. We've already defined nested zones,  as you could probably noticed there are two zones mentioned in the previous section. These zones are nested shorewall zones defined like "child:parent[,parent]".  The absence of specifically given `shorewall.zones_order` means that the shorewall cookbook will automatically determine the right order for you.
 
 # Attributes
 
@@ -113,4 +132,5 @@ Patches to address any of these items would be gratefully accepted.
 
 Authors
 =======
-* Denis Barishev, denis.barishev@gmail.com
+* Denis Barishev (<denis.barishev@gmail.com>)
+* Charles Duffy (<charles@poweredbytippr.com>)
