@@ -90,7 +90,7 @@ module Shorewall
         arrange_list = to_process.select do |hash|
           Zone.new(hash).parent_names.empty?
         end
-        yield(arrange_list.map { |h| Zone.new(h)} )
+        yield(arrange_list.map { |h| Zone.new(h)} ) unless arrange_list.empty?
         to_process -= arrange_list
 
         # Cycle through zones, and yield those which parents have been already ordered,
@@ -99,7 +99,7 @@ module Shorewall
           arrange_list = to_process.select do |hash|
             Zone.new(hash).parent_names.all? {|pn| list_hasname?(pn)}
           end
-          yield(arrange_list.map { |h| Zone.new(h) })
+          yield(arrange_list.map { |h| Zone.new(h) }) unless arrange_list.empty?
           to_process -= arrange_list
         end while not arrange_list.empty?
       end

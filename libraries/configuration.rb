@@ -46,6 +46,18 @@ module Shorewall
       zone_list.each {|zone| node.default['shorewall']['zones'] << zone.to_hash}
     end
 
+    def compute_rule(rule, data)
+      rule.keys.inject({}) do |hash, key|
+        hash[key] = case rule[key]
+                      when Proc
+                        rule[key].call(data)
+                      else
+                        rule[key].to_s
+                    end
+        hash
+      end
+    end
+
     private
 
     # Create zone list and arrange it
@@ -73,14 +85,14 @@ module Shorewall
     def setup_host(eth, zones)
       zones.each do |zone|
         # skip zone addition if already added or this particular interface has only one zone
-        return if zones.size == 1 || node['shorewall']['hosts'].any? {|o| o['zone'] == zone}
+        next if zones.size == 1 || node['shorewall']['hosts'].any? {|o| o['zone'] == zone}
         options = {}
         builtin = [:nosearch, :chefsearch]
         osearch = node['shorewall']['zone_hosts'][zone]
 
         if osearch.nil?
           Chef::Log.warn("Shorewall zone_hosts configuration is not defined for the zone #{zone}")
-          return
+          next
         end
 
         search_rule = Shorewall::SearchRule.new(osearch, {})

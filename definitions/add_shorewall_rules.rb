@@ -24,7 +24,7 @@ define :add_shorewall_rules, :match_nodes => [], :rules => [] do
     # rules we expect as a hash or maybe array of hashes
     (params[:rules].respond_to?(:has_key?) ? [params[:rules]] : params[:rules]).each do |rule|
       rule = Mash.new(rule)
-      data = opts.merge({:matched_hosts => []})
+      data = {:matched_hosts => []}
       node.default['shorewall']['rules'] << Shorewall::Configuration.compute_rule(rule, data)
     end
   else
