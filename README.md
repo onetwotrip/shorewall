@@ -35,9 +35,13 @@ Note how line continuations are added as necessary to keep column alignment in p
 
 # Usage
 
-Shorewall cookbook uses a set of attributes `zones, policy, rules...` to setup vital configuration for the shorewall files. The default configuration of those file will make shorewall block everything but SSH connections. So we've got to go through the attributes before using the cookbook.
+Shorewall cookbook uses a set of attributes `zones, policy, rules...` to setup vital configuration for the shorewall files. The default configuration of those file will make shorewall block everything but SSH connections. So you should look through the attributes before using the cookbook.
 
-There are two endpoints for configuration data input. Respectively *roles, environments* along with `add_shorewall_rules` definition. I stronly encourage to use `add_shorewall_rules` for configuring the shorewall rules instead of *roles or environments*.
+There are two endpoints for configuration data input. Respectively *roles, environments* along with `add_shorewall_rules` definition. I strongly encourage to use `add_shorewall_rules` for configuring the shorewall rules instead of *roles or environments*.
+
+## Using **add_shorewall_rules** definition
+
+This definition allows you to add rules to the shorewall right away from the recipe code.
 
 Typical usage of the definition is expected to look like the following:
 
@@ -57,13 +61,15 @@ Typical usage of the definition is expected to look like the following:
     end
 
 
-...in the above case, we're using the `add_shorewall_rules` definition to `ACCEPT` connections to port *8080*. `match_nodes` stanza can accept one *match item* or more like in our case. We've used two *match items* consequently there will be two *rules* generated. The same is valid for `rules`, you can pass one hash or an array of hashes. Basically if you do so you get all of the *rules* generated for each *match item*.
+...in the above case, we're using the `add_shorewall_rules` definition to `ACCEPT` connections to port *8080*. `match_nodes` stanza can accept one *match item* or more like in our case. We've used two *match items* consequently there will be two *rules* generated. The same is valid for `rules`, you can pass one hash or an array of hashes. Basically, if you do so you get all of the *rules* generated for each *match item*. When
+creating static rules which don't require hosts matching you are free to omit *match_nodes*.
 
 Notably, any of the values in the `rules` hash can be a block, in which case it
 is executed with a hash argument containing both the match data, retrieved with the **matched_hosts**  key and all those values you passed via match item options hash.
 
-Futher more the shorewall cookbook search implementaion was heavily reworked and now it provides puggable search capability. You can pass a hash configuring user defined search operation. For how to achieve this dive into the library code:)
+# Library information
 
+The shorewall cookbook search implementation was heavily reworked since 0.12.0 version and now it provides pluggable search capability. You can pass a hash configuring user defined search operation. For how to achieve this dive into the library code:)
 
 # Explicit configuration via role/environment attributes
 
@@ -100,7 +106,7 @@ This is the paste of a role default attributes section.
 
 Shorewall **zones order** is an important configuration issue. Namely the default zone `net` is located in the end of the zone file, since it has a capture for all the addresses (`0.0.0.0/0`). Putting the `net` zone in the begining we will end up with all the packets going to its corresponding iptables chain.
 
-The shorewall cookbook gives you a capabilty to define the desired order with the `shorewall.zones_order` attribute which is **"fw,lan,net"** by default. Just set the order by providing the string like "fw,lan,api,webf,net".
+The shorewall cookbook gives you a capability to define the desired order with the `shorewall.zones_order` attribute which is **"fw,lan,net"** by default. Just set the order by providing the string like "fw,lan,api,webf,net".
 
 But relax maybe we don't need to give the order attribute. We've already defined nested zones,  as you could probably noticed there are two zones mentioned in the previous section. These zones are nested shorewall zones defined like "child:parent[,parent]".  The absence of specifically given `shorewall.zones_order` means that the shorewall cookbook will automatically determine the right order for you.
 
@@ -116,7 +122,7 @@ But relax maybe we don't need to give the order attribute. We've already defined
  - `shorewall/public_zones` - specify that the public ip address will be retrieved for a zone (array). By default the zone **net** is only included.
  - `shorewall/rules`, `shorewall/policy`, `shorewall/hosts`, `shorewall/interfaces` configure the relevant shorewall files.
 
-**Important:** In previuos version of cookbook there were many override attributes. The new version of cookbook is suppused to run on chef11 which doesn't have weird attribute behaviour. So all of the attributes are set back to default level of precedence. Be aware if you override some attribute now it will loose it's default values.
+**Important:** In previous version of cookbook there were many override attributes. The new version of cookbook is supposed to run on chef11 which doesn't have weird attribute behavior. So all of the attributes are set back to default level of precedence. Be aware if you override some attribute now it will loose its default value.
 
 For more details, see the `attributes/default.rb` file.
 

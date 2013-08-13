@@ -17,6 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+Shorewall::Configuration.use(node)
+Shorewall::Configuration.setup
+
 restart_action = :restart
 
 case node['platform']
@@ -28,10 +31,6 @@ end
 package "shorewall" do
   action :install
 end
-
-# Set up the shorewall attributes
-self.send(:extend, Shorewall::Helpers)
-self.configure_shorewall
 
 if node['shorewall']['skip_restart'] || !node['shorewall']['enabled']
   Chef::Log.warn("recipe[#{cookbook_name}::#{recipe_name}] skipping the shorewall restart due to configuration")

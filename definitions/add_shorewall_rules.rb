@@ -18,16 +18,25 @@
 # limitations under the License.
 
 define :add_shorewall_rules, :match_nodes => [], :rules => [] do
-  # match_nodes we expect as an array or a nested array, so flatten and slice it
-  params[:match_nodes].flatten.each_slice(2) do |match, opts|
-    opts ||= {}
-    found  = Shorewall.search(match, opts)
 
+  # Only rules are passed to the definition
+  if params[:match_nodes].empty?
     # rules we expect as a hash or maybe array of hashes
     (params[:rules].respond_to?(:has_key?) ? [params[:rules]] : params[:rules]).each do |rule|
       rule = Mash.new(rule)
-      data = opts.merge({:matched_hosts => found.join(',')})
-      node.default['shorewall']['rules'] << Shorewall::Helpers.compute_rule(rule, data)
+      data = opts.merge({:matched_hosts => []})
+      node.default['shorewall']['rules'] << Shorewall::Configuration.compute_rule(rule, data)
+    end
+  else
+    # match_nodes we expect as an array or a nested array, so flatten and slice it
+    params[:match_nodes].flatten.each_slice(2) do |match, opts|
+      opts ||= {}
+      found  = Shorewall.search(match, opts)
+      (params[:rules].respond_to?(:has_key?) ? [params[:rules]] : params[:rules]).each do |rule|
+        rule = Mash.new(rule)
+        data = opts.merge({:matched_hosts => found.join(',')})
+        node.default['shorewall']['rules'] << Shorewall::Configuration.compute_rule(rule, data)
+      end
     end
   end
 
