@@ -65,11 +65,11 @@ module Shorewall
     def arrange
       unarranged_in_insert_order do |list|
         list.each do |zone|
-          orderi = order.find_index(zone.name)
-          if orderi.nil? && zone.parent_names.empty?
+          order_index = order.find_index(zone.name)
+          if order_index.nil? && zone.parent_names.empty?
             raise RuntimeError.new("Shorewall zone[#{zone.name}] add faild. No order or nesting specified!")
-          elsif not orderi.nil?
-            zones.insert(i, zone)
+          elsif not order_index.nil?
+            zones.insert(order_index, zone)
           else
             insert_zone(zone)
           end
