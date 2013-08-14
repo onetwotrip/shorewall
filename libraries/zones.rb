@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module Shorewall
+class Shorewall
 
   class Zone
     attr_reader :name, :zone, :type, :parent_names
@@ -41,7 +41,7 @@ module Shorewall
 
   # Ordered zone list class.
   #
-  class Config::ZoneList
+  class ZoneList
     attr_reader :zones, :order
 
     def initialize
@@ -124,7 +124,7 @@ module Shorewall
     end
 
     def node
-      Configuration.node
+      SingleConfig.instance.node
     end
 
     # Initial zone list population use the zones_order

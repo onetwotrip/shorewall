@@ -17,8 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Shorewall::Configuration.use(node)
-Shorewall::Configuration.setup
+Shorewall.use(node)
+Shorewall.setup
 
 restart_action = :restart
 

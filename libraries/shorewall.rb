@@ -19,7 +19,7 @@
 
 require 'chef/mash'
 
-module Shorewall
+class Shorewall
 
   # SearchRule search configuration class
   class SearchRule

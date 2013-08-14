@@ -22,7 +22,7 @@ require 'chef/log'
 require 'chef/dsl/data_query'
 require 'ipaddr'
 
-module Shorewall
+class Shorewall
   class Provider
 
     # Provider substitues back its search rule, no search is performed

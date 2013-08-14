@@ -19,10 +19,11 @@
 
 require 'singleton'
 require 'set'
+require 'forwardable'
 
-module Shorewall
+class Shorewall
 
-  class Config
+  class SingleConfig
     include Singleton
 
     attr_reader :node, :zone_list
@@ -56,6 +57,10 @@ module Shorewall
                     end
         hash
       end
+    end
+
+    def zone_interface(zone_name)
+      node['shorewall']['zone_interfaces'][zone_name]
     end
 
     private
@@ -138,5 +143,12 @@ module Shorewall
 
   end
 
-  Configuration ||= Config.instance
+  # Forward interface methods to the SingleConfig.instance
+  class << self
+    extend Forwardable
+
+    def_delegators 'Shorewall::SingleConfig.instance'.to_sym, :use, :setup, :zone_interface,
+      :order_node_zones, :compute_rule, :zone_list
+  end
+
 end

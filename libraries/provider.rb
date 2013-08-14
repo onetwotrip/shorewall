@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module Shorewall
+class Shorewall
 
   class Provider
     @@PROVIDERS ||= {} # chef multi-time code load prevention ^_^
