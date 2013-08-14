@@ -61,11 +61,30 @@ Typical usage of the definition is expected to look like the following:
     end
 
 
-...in the above case, we're using the `add_shorewall_rules` definition to `ACCEPT` connections to port *8080*. `match_nodes` stanza can accept one *match item* or more like in our case. We've used two *match items* consequently there will be two *rules* generated. The same is valid for `rules`, you can pass one hash or an array of hashes. Basically, if you do so you get all of the *rules* generated for each *match item*. When
-creating static rules which don't require hosts matching you are free to omit *match_nodes*.
+...in the above case, we're using the `add_shorewall_rules` definition to `ACCEPT` connections to port *8080*. `match_nodes` stanza can accept one *match item* or more like in our case. We've used two *match items* consequently there will be two *rules* generated. The same is valid for `rules`, you can pass one hash or an array of hashes. Basically, if you do so you get all of the *rules* generated for each *match item*. When creating static rules which don't require hosts matching you are free to omit *match_nodes*.
 
 Notably, any of the values in the `rules` hash can be a block, in which case it
 is executed with a hash argument containing both the match data, retrieved with the **matched_hosts**  key and all those values you passed via match item options hash.
+
+## Using **add_shorewall_zone** definition
+
+Another usage pattern comes when we want to add zones on runtime right away from the recipe code. Here comes `add_shorewall_zone` definition which expects zone name as the first argument and all the configuration parameters passed as always via block. The list of parameters:
+
+ * `interface` - is a **required** parameter which sets the physical interace for the new zone.
+ * `after`, `before` - positiong parameters used when a non-nested zone is created, since we don't know where the zone should be actually placed. These parameters are ingnored when we create a nested zone. The nested zone is always automatically placed right after its parent(s).
+ * `hosts` - the zone hosts search expression, which populates zones hosts via the shorewall search operation.
+ * `public` - specifies if addresses of the zone are public or private. Default is `false`.
+
+Typical usage of the definition might look as follows:
+
+    add_shorewall_zone 'test1' do
+      interface Shorewall.zone_interface('lan')
+      hosts '192.168.0.128/25'
+      after 'lan'
+      public false
+    end
+
+It's worth mentioning that `interface` is a required option, to simplify its choosing a helper method like `zone_interface` may be used. Also hosts `option` which basically can be omitted in case it's a single interface zone expects a valid search expression, for example like 'search:roles:test1'
 
 # Library information
 
