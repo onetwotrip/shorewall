@@ -22,8 +22,7 @@ default['shorewall']['skip_restart']  = false
 
 default['shorewall']['zone_interfaces']['net'] = "eth0"
 default['shorewall']['zone_interfaces']['lan'] = "eth0"
-#default['shorewall']['zone_hosts']['lan'] = "search:*:*"
-default['shorewall']['zone_hosts']['lan'] = "0.0.0.0/0"
+default['shorewall']['zone_hosts']['lan'] = "search:*:*"
 default['shorewall']['zone_hosts']['net'] = "0.0.0.0/0"
 
 default['shorewall']['interface_settings']['default'] = {:broadcast => 'detect',
