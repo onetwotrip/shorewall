@@ -50,9 +50,6 @@ default['shorewall']['interfaces']  = []
 default['shorewall']['hosts']       = []
 
 default['shorewall']['rules']       = []
-#     { 'description' => "Incoming SSH to firewall",
-#       'source' => "all", 'dest' => 'fw', 'proto' => 'tcp', 'dest_port' => 22, 'action' => 'Limit:none:SSHA,5,60'}
-# ]
 
 default['shorewall']['configuration']['ssh_enabled'] = true
 default['shorewall']['configuration']['ssh_rate_limit'] = '5/min:5'
