@@ -29,7 +29,7 @@ default['shorewall']['zone_hosts']['net'] = "0.0.0.0/0"
 default['shorewall']['interface_settings']['default'] = {:broadcast => 'detect',
                                                          :options   => 'tcpflags,blacklist,routefilter,nosmurfs,logmartians,dhcp'}
 
-default['shorewall']['actions'] = [ 'Limit' ]
+default['shorewall']['actions'] = []
 
 default['shorewall']['zones'] = [
     { 'zone' => "fw",  'type' => "firewall" },
@@ -49,7 +49,10 @@ default['shorewall']['policy'] = [
 default['shorewall']['interfaces']  = []
 default['shorewall']['hosts']       = []
 
-default['shorewall']['rules']       = [
-    { 'description' => "Incoming SSH to firewall",
-      'source' => "all", 'dest' => 'fw', 'proto' => 'tcp', 'dest_port' => 22, 'action' => 'Limit:none:SSHA,5,60'}
-]
+default['shorewall']['rules']       = []
+#     { 'description' => "Incoming SSH to firewall",
+#       'source' => "all", 'dest' => 'fw', 'proto' => 'tcp', 'dest_port' => 22, 'action' => 'Limit:none:SSHA,5,60'}
+# ]
+
+default['shorewall']['configuration']['ssh_enabled'] = true
+default['shorewall']['configuration']['ssh_rate_limit'] = '5/min:5'

@@ -1,9 +1,9 @@
 #
 # Author:: Denis Barishev (<denis.barishev@gmail.com>)
 # Cookbook Name:: shorewall
-# Recipe:: default
+# Recipe:: misc
 #
-# Copyright 2011-2013, Twiket LTD
+# Copyright 2013, Twiket LTD
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,16 +17,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_recipe "shorewall::config"
-include_recipe "shorewall::misc"
-
-# Start up the shorewall service
-service "shorewall" do
-  supports  [:status, :restart]
-  action    case node['shorewall']['enabled'].to_s
-            when 'true'
-              [:start, :enable]
-            else
-              [:disable]
-            end
+if node['shorewall']['configuration']['ssh_enabled']
+  rule = {
+    :description => "Incoming SSH to firewall",
+    :source => :all,
+    :dest => :fw, 
+    :proto => :tcp,
+    :dest_port => 22,
+    :action => :ACCEPT
+  }
+  rate_limit = node['shorewall']['configuration']['ssh_rate_limit'].to_s
+  rule.merge!({:rate_limit => "s:ssh:#{rate_limit}"}) if not rate_limit.empty?
+  node.default['shorewall']['rules'] << rule
 end
