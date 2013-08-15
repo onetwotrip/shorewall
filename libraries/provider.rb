@@ -36,7 +36,7 @@ class Shorewall
     end
 
     def self.klass(type)
-      @@PROVIDERS[type] or raise TypeError.new("Shorewall provider for :#{type} doesn't exist")
+      @@PROVIDERS[type] or raise TypeError.new("Shorewall provider for `#{type}' not found")
     end
 
     def execute

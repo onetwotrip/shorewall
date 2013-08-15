@@ -27,10 +27,12 @@ class Shorewall
 
     def initialize(search, options)
       if search.kind_of?(Hash)
-        # a custom rule is hash, here we store rule and options in the same mash
+      # a custom rule is hash, here we store rule and options in the same mash
 
         mash  = Mash.new(search)
-        @type  = mash.delete(:search).to_sym
+        @type = mash.delete(:search)
+        @type.nil? and raise ArgumentError.new("search hash requires :system key indicating the search provider")
+        @type = @type.to_sym
         @rule = mash.merge(Mash.new(options))
         @options = @rule
 
