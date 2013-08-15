@@ -70,8 +70,8 @@ is executed with a hash argument containing both the match data, retrieved with 
 
 Another usage pattern comes when we want to add zones on runtime right away from the recipe code. Here comes `add_shorewall_zone` definition which expects zone name as the first argument and all the configuration parameters passed as always via block. The list of parameters:
 
- * `interface` - is a **required** parameter which sets the physical interace for the new zone.
- * `after`, `before` - positiong parameters used when a non-nested zone is created, since we don't know where the zone should be actually placed. These parameters are ingnored when we create a nested zone. The nested zone is always automatically placed right after its parent(s).
+ * `interface` - is a **required** parameter which sets the physical interface for the new zone.
+ * `after`, `before` - positioning parameters used when a non-nested zone is created, since we don't know where the zone should be actually placed. These parameters are ingnored when we create a nested zone. The nested zone is always automatically placed right after its parent(s).
  * `hosts` - the zone hosts search expression, which populates zones hosts via the shorewall search operation.
  * `public` - specifies if addresses of the zone are public or private. Default is `false`.
 
@@ -84,7 +84,7 @@ Typical usage of the definition might look as follows:
       public false
     end
 
-It's worth mentioning that `interface` is a required option, to simplify its choosing a helper method like `zone_interface` may be used. Also hosts `option` which basically can be omitted in case it's a single interface zone expects a valid search expression, for example like 'search:roles:test1'
+It's worth mentioning that `interface` is a required option, to simplify interface choosing a helper method `zone_interface` might be used. Also `hosts` option which basically can be omitted in case it's a *single interface zone*, expects a valid search expression for example like `search:roles:test1`
 
 # Library information
 
