@@ -35,7 +35,11 @@ define :add_shorewall_rules, :match_nodes => [], :rules => [] do
       (params[:rules].respond_to?(:has_key?) ? [params[:rules]] : params[:rules]).each do |rule|
         rule = Mash.new(rule)
         data = opts.merge({:matched_hosts => found.join(',')})
-        node.default['shorewall']['rules'] << Shorewall.compute_rule(rule, data)
+        if data[:matched_hosts].empty?
+          Chef::Log.warn("[shorewall] match `#{params[:name]}' failed!")
+        else
+          node.default['shorewall']['rules'] << Shorewall.compute_rule(rule, data)
+        end
       end
     end
   end
