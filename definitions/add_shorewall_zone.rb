@@ -17,9 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-define :add_shorewall_zone, :type => 'ipv4', :public_zone => nil do
+define :add_shorewall_zone, :type => 'ipv4', :public_zone => nil, :interface_settings => nil do
   zone = Shorewall::Zone.new(params[:name])
-  pif = params[:interface] or raise ArgumentError.new("add_shorewall_zone requires the interface parameter")
+  iface = params[:interface] or raise ArgumentError.new("add_shorewall_zone requires the interface parameter")
   position = [:after, :before].select {|o| not params[o].nil?}.first
 
   # The zone is not nested, we must use order
@@ -40,9 +40,12 @@ define :add_shorewall_zone, :type => 'ipv4', :public_zone => nil do
     Chef::Log.debug("add_shorewall_zone ignores position `#{position}' for a nested zone")
   end
 
-  node.default['shorewall']['zone_interfaces'][zone.name] = pif
+  if not params[:interface_settings].nil?
+    node.default['shorewall']['interface_settings'][iface] << params[:interface_settings]
+  end
   node.default['shorewall']['zone_hosts'][zone.name] = params[:hosts] unless params[:hosts].nil?
   node.default['shorewall']['public_zones'] << zone.name if params[:public_zone] == true
+  node.default['shorewall']['zone_interfaces'][zone.name] = iface
   node.default['shorewall']['zones'] << {zone: zone.zone, type: params[:type]}
 
   Shorewall.setup
