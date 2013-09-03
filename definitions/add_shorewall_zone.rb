@@ -41,7 +41,7 @@ define :add_shorewall_zone, :type => 'ipv4', :public_zone => nil, :interface_set
   end
 
   if not params[:interface_settings].nil?
-    node.default['shorewall']['interface_settings'][iface] << params[:interface_settings]
+    node.default['shorewall']['interface_settings'][iface] = params[:interface_settings]
   end
   node.default['shorewall']['zone_hosts'][zone.name] = params[:hosts] unless params[:hosts].nil?
   node.default['shorewall']['public_zones'] << zone.name if params[:public_zone] == true
