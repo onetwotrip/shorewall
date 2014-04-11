@@ -17,6 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'chef/log'
 require 'singleton'
 require 'set'
 require 'forwardable'
@@ -35,7 +36,7 @@ class Shorewall
 
     def setup
       setup_zones
-      with_pif_zones do |eth, zones|
+      eth_zones do |eth, zones|
         setup_interface(eth, zones)
         setup_host(eth, zones)
       end
@@ -128,17 +129,20 @@ class Shorewall
       end
     end
 
-    # Interate pifs along with zones
+    # Iterate by eth interface with its residing zones
     #
-    def with_pif_zones
+    def eth_zones
       hash = {}
-      node['shorewall']['zone_interfaces'].each do |zone, eth|
-        hash.has_key?(eth) or hash[eth] = SortedSet.new
-        hash[eth].add(zone)
+      node['shorewall']['zone_interfaces'].each do |zone, eth_list|
+        # We tend to operate in multi inerfaces per zone mode. And support list of interfaces set in zone_interfaces
+        # But since the zone_hosts is only a single rule, search results will be of course duplicated.
+        eths = eth_list.split(',')
+        eths.each do |eth|
+          hash.has_key?(eth) or hash[eth] = SortedSet.new
+          hash[eth] << zone
+        end
       end
-      hash.each do |eth, zones|
-        yield(eth, zones.to_a)
-      end
+      hash.each {|eth, zones| yield(eth, zones.to_a)}
     end
 
   end
