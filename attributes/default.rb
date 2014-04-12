@@ -47,8 +47,9 @@ default['shorewall']['policy'] = [
 
 default['shorewall']['interfaces']  = []
 default['shorewall']['hosts']       = []
-
 default['shorewall']['rules']       = []
+
+default['shorewall']['zone_search_scramble'] = []
 
 default['shorewall']['configuration']['ssh_enabled'] = true
 default['shorewall']['configuration']['ssh_rate_limit'] = '5/min:5'

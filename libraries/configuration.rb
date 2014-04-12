@@ -35,11 +35,9 @@ class Shorewall
     end
 
     def setup
-      setup_zones
-      eth_zones do |eth, zones|
-        setup_interface(eth, zones)
-        setup_host(eth, zones)
-      end
+      order_zones
+      set_eth_defaults
+      set_zone_hosts
     end
 
     # Order node['shorewall']['zones'] array
@@ -66,21 +64,25 @@ class Shorewall
 
     private
 
-    # Create zone list and arrange it
-    def setup_zones
+    # Create ordered zone list and populate shorewall.zones attributes
+    #
+    def order_zones
       @zone_list ||= ZoneList.new
       zone_list.arrange
     end
 
-    # Populate node['shorewall']['interfaces'] attributes
+    # Populate node['shorewall']['interfaces'] attributes, sets the default interface
+    # settings and default zone (for single-zone interface)
     #
-    def setup_interface(eth, zones)
-      unless node['shorewall']['interfaces'].any? {|h| h['interface'] == eth }
-        node.default['shorewall']['interfaces'] << interface_settings(eth)
-        # populate interfaces attributes with eth => zone,
-        # since the current interface has only one zone. Otherwise leave it empty.
-        if zones.size == 1
-          node.default['shorewall']['interfaces'].last['zone'] = zones.first
+    def set_eth_defaults(eth_zones_hash)
+      eth_zones.each do |eth, zones|
+        unless node['shorewall']['interfaces'].any? {|h| h['interface'] == eth }
+          node.default['shorewall']['interfaces'] << interface_settings(eth)
+          # populate interfaces attributes with eth => zone,
+          # since the current interface has only one zone. Otherwise leave it empty.
+          if zones.size == 1
+            node.default['shorewall']['interfaces'].last['zone'] = zones.first
+          end
         end
       end
     end
@@ -90,7 +92,6 @@ class Shorewall
     #
     def setup_host(eth, zones)
       zones.each do |zone|
-        # skip zone addition if already added or this particular interface has only one zone
         next if zones.size == 1 || node['shorewall']['hosts'].any? {|o| o['zone'] == zone}
         options = {}
         builtin = [:nosearch, :chefsearch]
@@ -101,6 +102,7 @@ class Shorewall
           next
         end
 
+        if 
         search_rule = Shorewall::SearchRule.new(osearch, {})
         if builtin.include?(search_rule.type)
           options = {
@@ -110,6 +112,54 @@ class Shorewall
         end
         result = Shorewall.search(osearch, options)
         node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{result.join(',')}"}
+      end
+    end
+
+    # Populate shorewall.hosts attributes
+    #
+    def set_zone_hosts
+      ez_hash = eth_zones_hash
+      node['shorewall']['zone_hosts'].each do |zone, osearch|
+        # Skip zone add if: a) it's already there, b) this is single-zone interface
+        #
+        skip = node['shorewall']['hosts'].any? {|o| o['zone'] == zone}
+        skip ||= eth_zone_count(ez_hash, zone) == 1
+        next if skip
+
+        options = {}
+        builtin = [:nosearch, :chefsearch]
+        osearch = node['shorewall']['zone_hosts'][zone]
+        if osearch.nil?
+          Chef::Log.warn("Shorewall zone_hosts configuration is not defined for the zone #{zone}")
+          next
+        end
+
+        add_search_hosts(zone, osearch)
+      end
+    end
+
+    def add_search_hosts(zone, osearch)
+      eths = node['shorewall']['zone_interfaces'][zone].split(',')
+
+      if node['shorewall']['zone_search_scramble'].include?(zone)
+        # During scramble search only one search is handled and 
+        # the addresses are not bound to any particular interdace.
+
+        options = {scramble: => true, :public => is_public?(zone)}
+        found_hosts = Shorewall.search(osearch, options)
+        # The same hosts search results will appear on each of the interfaces
+        eths.each do |eth|
+          node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{found_hosts.join(',')}"
+        end
+      else
+        # When normal search occures with search and extract address
+        # from the given interface several times.
+
+        eths.each do |eth|
+          options = {:interface => eth, :public => is_public?(zone)}
+          found_hosts = Shorewall.search(osearch, options)
+          node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{found_hosts.join(',')}"
+        end
       end
     end
 
@@ -129,20 +179,27 @@ class Shorewall
       end
     end
 
-    # Iterate by eth interface with its residing zones
+    # Creates hash: interface => [zone1, zone2]
     #
-    def eth_zones
+    def eth_zones(&block)
       hash = {}
-      node['shorewall']['zone_interfaces'].each do |zone, eth_list|
-        # We tend to operate in multi inerfaces per zone mode. And support list of interfaces set in zone_interfaces
-        # But since the zone_hosts is only a single rule, search results will be of course duplicated.
-        eths = eth_list.split(',')
-        eths.each do |eth|
+      node['shorewall']['zone_interfaces'].each do |zone, eths|
+        # zone_interfaces support multiple values given as comma separated list
+        list = eths.split(',')
+        list.each do |eth|
           hash.has_key?(eth) or hash[eth] = SortedSet.new
           hash[eth] << zone
         end
       end
-      hash.each {|eth, zones| yield(eth, zones.to_a)}
+      hash
+    end
+
+
+    # Count number if interfaces which zone resides in.
+    # Expected input is eth_zones_hash and zone name
+    #
+    def eth_zone_count(hash, zone)
+      hash.inject(0) {|s,o| eth, zones = o; s = s + 1 if zones.include?(zone); s} 
     end
 
   end

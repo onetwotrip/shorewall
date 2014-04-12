@@ -46,7 +46,7 @@ class Shorewall
       end
 
       def check
-        if @search_rule.options[:interface].to_s.empty?
+        if !@search_rule.options[:scramble] && @search_rule.options[:interface].to_s.empty?
           Chef::Log.error("You must provide :interface option for #{self.class}")
           raise RuntimeError.new("#{self.class} wrong search options!")
         end
@@ -60,11 +60,18 @@ class Shorewall
       end
 
       # Get address of a physical interface (including all aliased interfaces)
-      def pif_addresses(node, interface)
+      #
+      # Allow dup
+      #
+      def pif_addresses(node, interface=nil)
         addresses = []
         begin
           node['network']['interfaces'].each do |eth, opts|
-            next unless eth.split(':').first == interface
+            # if interface is not matched and no-scrambled search performed
+            # we skip address retrieval.
+            unless interface.nil? || eth.split(':').first == interface
+              next
+            end
             opts['addresses'].each do |ip, eth_opts|
               addresses << IPAddr.new(ip) if eth_opts['family'] == 'inet'
             end
