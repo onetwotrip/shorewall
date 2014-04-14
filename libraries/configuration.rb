@@ -74,7 +74,7 @@ class Shorewall
     # Populate node['shorewall']['interfaces'] attributes, sets the default interface
     # settings and default zone (for single-zone interface)
     #
-    def set_eth_defaults(eth_zones_hash)
+    def set_eth_defaults
       eth_zones.each do |eth, zones|
         unless node['shorewall']['interfaces'].any? {|h| h['interface'] == eth }
           node.default['shorewall']['interfaces'] << interface_settings(eth)
@@ -87,47 +87,17 @@ class Shorewall
       end
     end
 
-    # Populate node['shorewall']['hosts'] attributes.
-    # Performs actual shorewall search operation.
-    #
-    def setup_host(eth, zones)
-      zones.each do |zone|
-        next if zones.size == 1 || node['shorewall']['hosts'].any? {|o| o['zone'] == zone}
-        options = {}
-        builtin = [:nosearch, :chefsearch]
-        osearch = node['shorewall']['zone_hosts'][zone]
-
-        if osearch.nil?
-          Chef::Log.warn("Shorewall zone_hosts configuration is not defined for the zone #{zone}")
-          next
-        end
-
-        if 
-        search_rule = Shorewall::SearchRule.new(osearch, {})
-        if builtin.include?(search_rule.type)
-          options = {
-            :interface => eth,
-            :public    => is_public?(zone)
-          }
-        end
-        result = Shorewall.search(osearch, options)
-        node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{result.join(',')}"}
-      end
-    end
-
     # Populate shorewall.hosts attributes
     #
     def set_zone_hosts
-      ez_hash = eth_zones_hash
+      ez_hash = eth_zones
       node['shorewall']['zone_hosts'].each do |zone, osearch|
         # Skip zone add if: a) it's already there, b) this is single-zone interface
         #
-        skip = node['shorewall']['hosts'].any? {|o| o['zone'] == zone}
-        skip ||= eth_zone_count(ez_hash, zone) == 1
+        skip   = node['shorewall']['hosts'].any? {|o| o['zone'] == zone}
+        skip ||= max_residing_zones(ez_hash, zone) == 1
         next if skip
 
-        options = {}
-        builtin = [:nosearch, :chefsearch]
         osearch = node['shorewall']['zone_hosts'][zone]
         if osearch.nil?
           Chef::Log.warn("Shorewall zone_hosts configuration is not defined for the zone #{zone}")
@@ -142,14 +112,14 @@ class Shorewall
       eths = node['shorewall']['zone_interfaces'][zone].split(',')
 
       if node['shorewall']['zone_search_scramble'].include?(zone)
-        # During scramble search only one search is handled and 
+        # During scramble search only one search is handled and
         # the addresses are not bound to any particular interdace.
-
-        options = {scramble: => true, :public => is_public?(zone)}
+        options = {:scramble => true, :public => is_public?(zone)}
         found_hosts = Shorewall.search(osearch, options)
+
         # The same hosts search results will appear on each of the interfaces
         eths.each do |eth|
-          node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{found_hosts.join(',')}"
+          node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{found_hosts.join(',')}"}
         end
       else
         # When normal search occures with search and extract address
@@ -158,7 +128,7 @@ class Shorewall
         eths.each do |eth|
           options = {:interface => eth, :public => is_public?(zone)}
           found_hosts = Shorewall.search(osearch, options)
-          node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{found_hosts.join(',')}"
+          node.default['shorewall']['hosts'] << {'zone' => zone, 'hosts' => "#{eth}:#{found_hosts.join(',')}"}
         end
       end
     end
@@ -195,11 +165,11 @@ class Shorewall
     end
 
 
-    # Count number if interfaces which zone resides in.
-    # Expected input is eth_zones_hash and zone name
+    # Get maximum amount of zones members of interface.
+    # Expected input is eth_zones hash and zone name
     #
-    def eth_zone_count(hash, zone)
-      hash.inject(0) {|s,o| eth, zones = o; s = s + 1 if zones.include?(zone); s} 
+    def max_residing_zones(hash, zone)
+      hash.inject(0) {|s,o| _,zones = o; size = zones.size; (zones.include?(zone) && size > s) ? size : s}
     end
 
   end
