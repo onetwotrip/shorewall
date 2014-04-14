@@ -129,6 +129,30 @@ The shorewall cookbook gives you a capability to define the desired order with t
 
 But relax maybe we don't need to give the order attribute. We've already defined nested zones,  as you could probably noticed there are two zones mentioned in the previous section. These zones are nested shorewall zones defined like "child:parent[,parent]".  The absence of specifically given `shorewall.zones_order` means that the shorewall cookbook will automatically determine the right order for you.
 
+# Zone scrambled search
+
+The new search mode which makes the address retrieval procedure indifferent to the actual interface. These maybe useful when more sophisticated network layouts are being ran. For example, let's say that we have different networks (**A** and **B**) connected via routable VPN solution. These networks have different interface layouts. LAN network resides on the **eth0** in the first network and on **eth1** in the second network. Without scrambled mode on it's impossible to retrieve private IP address of machines in the remote network. Because the default address retrieval tries to pick up the IP address of the **eth0** interface even if the **B**-network node is found by the search operation. In the given case we should enable scrambled mode, like the following:
+
+    "shorewall": {
+      "zone_search_scramble": ["lan"]
+    }
+
+By specifying this the *search scrambled* mode will be used when searching for hosts of the **lan** zone. In fact the scrambled mode ignores the actual interface and picks up all private addresses of a particular node.
+
+# Multi-interface zones
+
+Also this is the new feature which is introduced in 0.13.10 version. Now it's possible to do like the following:
+
+    "shorewall": {
+      "zone_search_scramble": ["lan"],
+      "zone_interfaces": {
+        "lan": "tun0,eth0",
+        "net": "eth0"
+      }
+    }
+
+Hosts or interface file are populated several times for each given interface. Shorewall uses hosts file only in case if there is more than one zone on the particular. The configuration above sets two zones: *lan* and *net* on the interface **eth0**. When lan hosts will be populated the default rule `search:*:*` is used. So the search operation takes place only one time, it picks up all the private IP addresses due to the scrambled mode used and multiple hosts rules are inserted for each of the interfaces given (**tun0** and **eth0**).
+
 # Attributes
 
  - `shorewall/zones` - sets up the shorewall zone configuration (array of hashes). Three zones are created by default: **fw, lan, net**.
@@ -140,6 +164,7 @@ But relax maybe we don't need to give the order attribute. We've already defined
  - `shorewall/zone_interfaces/ZONE` - specify the interface where particular zone resides. Defaults **"lan" => "eth0", "net" => "eth0"**.
  - `shorewall/public_zones` - specify that the public ip address will be retrieved for a zone (array). By default the zone **net** is only included.
  - `shorewall/rules`, `shorewall/policy`, `shorewall/hosts`, `shorewall/interfaces` configure the relevant shorewall files.
+ - `shorewall/zone_search_scrample` - specify the list of zones that will operate in search **scrambled** mode.
 
 **Important:** In previous version of cookbook there were many override attributes. The new version of cookbook is supposed to run on chef11 which doesn't have weird attribute behavior. So all of the attributes are set back to default level of precedence. Be aware if you override some attribute now it will loose its default value.
 
