@@ -49,10 +49,10 @@ class Shorewall
     def compute_rule(rule, data)
       rule.keys.inject({}) do |hash, key|
         hash[key] = case rule[key]
-                      when Proc
-                        rule[key].call(data)
-                      else
-                        rule[key].to_s
+                    when Proc
+                      rule[key].call(data)
+                    else
+                      rule[key].to_s
                     end
         hash
       end
@@ -179,7 +179,7 @@ class Shorewall
     extend Forwardable
 
     def_delegators 'Shorewall::SingleConfig.instance'.to_sym, :use, :setup, :zone_interface,
-      :order_node_zones, :compute_rule, :zone_list
+                   :order_node_zones, :compute_rule, :zone_list
   end
 
 end
