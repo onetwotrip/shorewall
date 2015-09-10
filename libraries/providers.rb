@@ -42,7 +42,7 @@ class Shorewall
       PRIVATE_RANGES = ['192.168.0.0/16', '172.16.0.0/12', '10.0.0.0/8'].map {|ip| IPAddr.new(ip)}
 
       def search_nodes
-        search(:node, @search_rule.rule)
+        partial_search(:node, @search_rule.rule, :keys => { 'name' => ['name'], 'network' => ['network'], })
       end
 
       def check
